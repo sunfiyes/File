@@ -1,0 +1,237 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="shortcut icon" href="logo.ico" type="image/x-icon">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <!--<link rel="icon" href="../../favicon.ico">-->
+
+  <title>Url提取正文api演示</title>
+
+  <!-- Bootstrap core CSS -->
+  <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+
+
+  <!--<link href="/static/css/table.css" rel="stylesheet" type="text/css"/>-->
+<style type="text/css">
+table.gridtable {
+    font-family: verdana,arial,sans-serif;
+    font-size:11px;
+    color:#333333;
+    border-width: 1px;
+    border-color: #666666;
+    border-collapse: collapse;
+  width: auto;
+}
+table.gridtable th {
+    border-width: 1px;
+    padding: 8px;
+    border-style: solid;
+    border-color: #666666;
+    background-color: #dedede;
+}
+table.gridtable td {
+    width:20px;
+    border-width: 1px;
+    padding: 8px;
+    border-style: solid;
+    border-color: #666666;
+    background-color: #ffffff;
+}
+</style>
+  <!-- Custom styles for this template -->
+  <script src="http://cdn.bootcss.com/jquery/1.12.1/jquery.js"></script>
+<script>
+      function copy2s()
+      {
+          document.getElementById('source').value = document.getElementById('examples').innerHTML;
+      }
+
+      var time1=0
+      function timmer(){
+          time1+=0.5;
+          document.getElementById('qair_result').innerHTML = '正在载入中,您已等待 '+time1+'秒'
+      }
+
+      function getRadioValue(){
+          var radio = document.getElementsByName("index");
+          for (i=0; i<radio.length; i++) {
+              if (radio[i].checked) {
+                  return radio[i].value;
+              }
+          }
+      }
+
+      function get_qair_result()
+      {
+          var source = document.forms.input.source.value;
+          var amount = document.forms.input.amount.value;
+          var index = getRadioValue();
+          if (source&&amount){
+              var sel=new Array(3);
+              var response = jQuery.ajax({
+                  async:  'True',
+                  url: 'choice?',
+                  type: 'GET',
+                  data:{'username':'kunalup'},
+                  error: function(data){
+                      document.getElementById('qair_result').innerHTML = 'Failed'
+                  },
+                  complete:function(data){
+                  },
+                  success:function(response){
+                      var res=JSON.parse(response);
+                      console.log(res);
+                      for(var i=0; i<res.length; i++){
+                          if(confirm("Do you prefer "+res[i][0]+" to be "+res[i][1]+" ?")){
+                              sel[i] = 1;
+                          } else {
+                              sel[i] = 0;
+                          }
+                      }
+                      var response = jQuery.ajax({
+                      //url: 'url2text.php?mode='+ex_mode+'&url='+source,
+                      async:  'True',
+                      url: 'reco?',
+                      type: 'GET',
+                      data:{'amount':amount,'query':source,'index':index, 'sel':JSON.stringify(sel)},
+                      //数据加载前调用的方法 beforeSend()
+                      beforeSend: function(data){
+                          document.getElementById('res_mark').innerHTML='结果'
+                          //这里判断，如果没有加载数据，会显示loading
+                          if(data.readyState == 0){
+                              t1=setInterval("timmer()",500);
+                          }
+                      },
+                      error: function(data){
+                          document.getElementById('qair_result').innerHTML = '抱歉,数据加载失败'
+                      },
+                      complete:function(data){
+                      },
+                      success:function(response){
+                          var res=JSON.parse(response);
+                          console.log(res);
+                          var div = document.getElementById("qair_result");
+                          var table = document.createElement("table");//创建table
+                          var thead = document.createElement("thead");//创建表头
+                          table.appendChild(thead);
+                          var tr =document.createElement("tr");
+                          thead.appendChild(tr);
+                          var th = document.createElement("th");th.innerHTML = "#"
+                          tr.appendChild(th);
+                          var th = document.createElement("th");th.innerHTML = "title"
+                          tr.appendChild(th);
+                          var th = document.createElement("th");th.innerHTML = "duration"
+                          tr.appendChild(th);
+                          var th = document.createElement("th");th.innerHTML = "price"
+                          tr.appendChild(th);
+                          var th = document.createElement("th");th.innerHTML = "seller_name"
+                          tr.appendChild(th);
+                          var th = document.createElement("th");th.innerHTML = "sub_category"
+                          tr.appendChild(th);
+                          var th = document.createElement("th");th.innerHTML = "category"
+                          tr.appendChild(th);
+                          var th = document.createElement("th");th.innerHTML = "description"
+                          tr.appendChild(th);
+                          var th = document.createElement("th");th.innerHTML = "loss"
+                          tr.appendChild(th);
+                          var len = res.length;
+                          var keywords = ""
+                          for(var i=0; i<res[len-1].length; i++){
+                              keywords += res[len-1][i] + " | ";
+                          }
+                          document.getElementById('keywords').innerHTML=keywords;
+                          for(var i=0; i<len-1; i++){
+                              var row = table.insertRow();//创建一行
+                                  var cell = row.insertCell();//创建一个单元
+                                  cell.innerHTML = i+1;
+                              for (var j=1;j<res[0].length;j++){
+                                  var cell = row.insertCell();//创建一个单元
+                                  cell.innerHTML = res[i][j];
+                              }
+                          }
+                          div.appendChild(table);
+                          table.className = "gridtable";
+                          //document.getElementById('qair_result').innerHTML = '<font  size="4" color="red"><strong>生成的回复</font></strong><br>'+res[1][2].replace(/\n/g,"\<br\>")+"<br>";
+                          document.getElementById('res_mark').innerHTML='结果(共耗时'+time1+'秒)'
+                          clearInterval(t1);
+                          time1 = 0
+                      }
+                  })
+                  }
+              })
+
+          }else if(!source){
+
+              alert('source is NaN');
+          }
+          else if(!amount){
+              alert('amount is NaN');
+          }
+      }
+      function xxx(){
+			var xxx = Showbo.Msg.confirm('您确定删除这条记录吗？', function(flag){
+            if(flag=='yes'){
+                Showbo.Msg.alert('你点击了确定!');
+            }else if(flag=='no'){
+                Showbo.Msg.alert('你点击了取消!');
+            }
+        });
+      }
+  </script>
+</head>
+
+<body>
+<div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="index.html">A</a>
+      <a class="navbar-brand" href="url2text.html">B</a>
+      <a class="navbar-brand" href="ars.html">C</a>
+      <a class="navbar-brand" href="ner.html">D</a>
+      <a class="navbar-brand" href="intent.html">E</a>
+    </div>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <div style='padding:30px'>
+    </div>
+    <form id='input' onsubmit='get_qair_result(); return false;'>
+      <div class="input-group ">
+        <span class="input-group-addon">输入你的需求</span>
+        <input type="text"  style="width:70%" class="form-control" id='source' placeholder="输入你的需求.....">&nbsp;
+        <button type="submit" class="btn btn-default">搜索</button>
+      </div>
+      <div style='padding:15px'>
+        <span>输入返回的结果数量</span>
+        <input type="text" id='amount' style="width:6%" name="amount_zone" value="100"/>
+      </div>
+    </form>
+    <button onclick="xxx()">xxx</button>
+    <div id="btn-dialogBox" style='padding:5px'></div>
+    <div class="panel panel-default">
+      <div class="panel-heading"><strong>举例: </strong>
+        <button type="button" style = "position:right:0;" onclick="copy2s()">复制</button>
+      </div>
+      <div class="panel-body" id='examples'>i want to fix my wordpress website</div>
+    </div>
+    <div class="panel panel-default">
+      <div class="panel-heading"><strong>已提取关键词: </strong>
+      </div>
+      <div class="panel-body" id='keywords'></div>
+    </div>
+    <div class="panel panel-default">
+      <div class="panel-heading" id ='res_mark'>结果</div>
+      <div class="panel-body" id='qair_result' style="width: 100%; overflow: auto">
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
